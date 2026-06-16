@@ -19,6 +19,8 @@ import subprocess
 import time
 from typing import Any, Dict, List, Optional
 
+from src.utils.opencli_path import get_opencli_path
+
 
 # ------------------------------------------------------------------
 # 品牌别名映射表（大众点评关键词修正）
@@ -64,7 +66,6 @@ class OpenCLIBrowser:
     """OpenCLI Browser 封装，通过 CLI 调用实现浏览器自动化。"""
 
     OPENCLI_BIN = "node"
-    OPENCLI_PATH = "/Users/yuxuanyu/workspace/OpenCLI/dist/src/main.js"
 
     def __init__(self, workspace: str = "default"):
         self.workspace = workspace
@@ -77,7 +78,7 @@ class OpenCLIBrowser:
         """执行 opencli browser 子命令，返回 stdout。"""
         cmd = [
             self.OPENCLI_BIN,
-            self.OPENCLI_PATH,
+            get_opencli_path(),
             "browser",
             "--workspace",
             self.workspace,
