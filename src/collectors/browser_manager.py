@@ -2,20 +2,10 @@
 浏览器管理器 — 只检测、不启动、不杀进程。
 依赖用户已打开的 Chrome + OpenCLI Extension。
 """
-import subprocess
 import time
 from typing import Optional, Dict, Any
 
-
-def run_opencli(*args: str, timeout: int = 15) -> tuple[str, str, int]:
-    """执行 opencli 子命令，返回 (stdout, stderr, returncode)"""
-    cmd = [
-        "node",
-        "/Users/yuxuanyu/workspace/OpenCLI/dist/src/main.js",
-        *args,
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-    return result.stdout, result.stderr, result.returncode
+from src.utils.opencli_path import run_opencli
 
 
 def check_opencli_extension() -> bool:
