@@ -1,0 +1,159 @@
+# 硬性规则配置
+# 触发以下任一规则将直接导致风险等级下调或拒绝授信
+
+hard_rules:
+  # ===== 一票否决项（不分规模）=====
+  veto:
+    - name: "失信被执行人"
+      condition: "dishonest_records > 0"
+      action: "grade_max: B"
+      desc: "当前存在失信被执行记录，最高评级为B"
+    
+    - name: "严重经营异常"
+      condition: "abnormal_records >= 3 AND penalty_records >= 2"
+      action: "grade_max: BB"
+      desc: "经营异常3次以上且行政处罚2次以上，最高评级BB"
+    
+    - name: "严重资不抵债"
+      condition: "debt_ratio > 1.0"
+      action: "grade_max: B"
+      desc: "资产负债率超过100%，最高评级B"
+    
+    - name: "连续亏损"
+      condition: "net_margin < -0.05 AND revenue_growth < -0.2"
+      action: "grade_max: BB"
+      desc: "亏损超过5%且营收下降超过20%，最高评级BB"
+    
+    - name: "大额逾期"
+      condition: "max_overdue_amount > 0.3"
+      action: "grade_max: BB"
+      desc: "最大逾期金额超过授信额度30%，最高评级BB"
+    
+    - name: "回款极差"
+      condition: "on_time_rate < 0.5 AND avg_overdue_days > 60"
+      action: "grade_max: B"
+      desc: "准时回款率低于50%且平均逾期60天以上，最高评级B"
+
+    # ===== 按规模分层的诉讼否决规则 =====
+    - name: "微型企业重大诉讼"
+      condition: "company_size == 'micro' AND weighted_lawsuit_score >= 3"
+      action: "grade_max: BBB"
+      desc: "微型企业加权诉讼≥3起（买卖合同纠纷×3），最高评级BBB"
+    
+    - name: "微型企业严重诉讼"
+      condition: "company_size == 'micro' AND weighted_lawsuit_score >= 5"
+      action: "grade_max: BB"
+      desc: "微型企业加权诉讼≥5起，最高评级BB"
+    
+    - name: "中小企业重大诉讼"
+      condition: "company_size == 'sme' AND weighted_lawsuit_score >= 10"
+      action: "grade_max: BBB"
+      desc: "中小企业加权诉讼≥10起，最高评级BBB"
+    
+    - name: "中小企业严重诉讼"
+      condition: "company_size == 'sme' AND weighted_lawsuit_score >= 15"
+      action: "grade_max: BB"
+      desc: "中小企业加权诉讼≥15起，最高评级BB"
+    
+    - name: "大型企业重大诉讼"
+      condition: "company_size == 'large' AND weighted_lawsuit_score >= 30"
+      action: "grade_max: BBB"
+      desc: "大型企业加权诉讼≥30起，最高评级BBB"
+    
+    - name: "大型企业严重诉讼"
+      condition: "company_size == 'large' AND weighted_lawsuit_score >= 50"
+      action: "grade_max: BB"
+      desc: "大型企业加权诉讼≥50起，最高评级BB"
+
+    # ===== 资金链断裂信号（不分规模）=====
+    - name: "当前被执行"
+      condition: "executed_count > 0"
+      action: "grade_max: BB"
+      desc: "当前存在被执行人记录，最高评级BB"
+    
+    - name: "当前限高消费"
+      condition: "restriction_count > 0"
+      action: "grade_max: B"
+      desc: "当前存在限制高消费记录，最高评级B"
+    
+    - name: "股权大面积冻结"
+      condition: "pledge_freeze_count >= 3"
+      action: "grade_max: BB"
+      desc: "股权冻结3次以上，最高评级BB"
+
+  # ===== 预警规则 =====
+  warning:
+    - name: "营收下滑预警"
+      condition: "revenue_growth < -0.1"
+      level: "yellow"
+      desc: "营收下滑超过10%"
+    
+    - name: "现金流预警"
+      condition: "cash_flow < 0"
+      level: "yellow"
+      desc: "经营现金流为负"
+    
+    - name: "股权质押预警"
+      condition: "pledge_freeze > 0.2"
+      level: "orange"
+      desc: "股权质押/冻结超过20%"
+    
+    - name: "负面舆情预警"
+      condition: "negative_news >= 5"
+      level: "orange"
+      desc: "负面舆情5条以上"
+    
+    - name: "逾期恶化预警"
+      condition: "avg_overdue_days > 30"
+      level: "red"
+      desc: "平均逾期超过30天"
+    
+    - name: "买卖合同纠纷集中"
+      condition: "contract_dispute_ratio > 0.5 AND lawsuit_count >= 2"
+      level: "orange"
+      desc: "超过50%诉讼为买卖合同纠纷，供应商链条紧张"
+    
+    - name: "门店大量暂停营业"
+      condition: "dp_pause_ratio > 0.3"
+      level: "red"
+      desc: "大众点评门店暂停营业比例超过30%，经营恶化"
+    
+    - name: "库存周转过慢"
+      condition: "inventory_turnover_days > 90"
+      level: "yellow"
+      desc: "库存周转天数超过90天"
+    
+    - name: "销售持续下滑"
+      condition: "recent_sales_trend < -0.2"
+      level: "orange"
+      desc: "近3个月销售额环比下滑超过20%"
+
+  # ===== 头部企业保底规则（渠道话语权） =====
+  head_enterprise:
+    - name: "头部连锁企业基础信用"
+      condition: "dp_store_count >= 1000 AND dp_pause_ratio < 0.1 AND executed_count == 0 AND restriction_count == 0 AND sudden_death_risk == 0"
+      action: "grade_min: A"
+      desc: "头部连锁企业（门店1000+），渠道话语权强，无资金链断裂信号，基础等级不低于A"
+
+  # ===== 新客户规则 =====
+  new_client:
+    - name: "新客户首次合作"
+      condition: "cooperation_years < 0.5"
+      action: "payment_behavior_score_max: 50"
+      desc: "首次合作客户，履约行为最高50分（风险未知）"
+      policy_adjust: "days_reduce: 15, credit_reduce: 0.5"
+    
+    - name: "合作不足一年"
+      condition: "cooperation_years >= 0.5 AND cooperation_years < 1"
+      action: "payment_behavior_score_max: 70"
+      desc: "合作不足一年，履约行为最高70分"
+
+# 行业调整系数（可选）
+industry_adjustments:
+  technology: {multiplier: 1.05, desc: "科技行业，轻资产，适度放宽"}
+  manufacturing: {multiplier: 1.0, desc: "制造业，标准评估"}
+  retail: {multiplier: 0.95, desc: "零售行业，现金流波动大，适度收紧"}
+  toys_entertainment: {multiplier: 0.95, desc: "潮玩/泛娱乐零售，IP热度波动大，季节性明显，适度收紧"}
+  real_estate: {multiplier: 0.80, desc: "房地产行业，当前风险较高，显著收紧"}
+  construction: {multiplier: 0.85, desc: "建筑行业，账期长，显著收紧"}
+  trade: {multiplier: 0.90, desc: "贸易行业，资金周转快但风险高，适度收紧"}

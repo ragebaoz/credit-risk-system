@@ -1,0 +1,257 @@
+# 信用评估权重配置（6维度版）
+# 维度权重差异控制在10%以内，总和为100%
+# 缺省指标默认分从60分调整为10分（严格策略）
+
+dimensions:
+  basic_credit:
+    name: "基础信用"
+    weight: 0.50
+    indicators:
+      established_years:
+        name: "成立年限"
+        weight: 0.15
+        scoring:
+          - {max: 1, score: 20, desc: "1年以下"}
+          - {min: 1, max: 3, score: 40, desc: "1-3年"}
+          - {min: 3, max: 5, score: 60, desc: "3-5年"}
+          - {min: 5, max: 10, score: 80, desc: "5-10年"}
+          - {min: 10, score: 100, desc: "10年以上"}
+      
+      paid_in_capital:
+        name: "实缴资本"
+        weight: 0.40
+        scoring:
+          - {max: 1000000, score: 20, desc: "100万以下"}
+          - {min: 1000000, max: 5000000, score: 40, desc: "100-500万"}
+          - {min: 5000000, max: 10000000, score: 60, desc: "500-1000万"}
+          - {min: 10000000, max: 50000000, score: 80, desc: "1000-5000万"}
+          - {min: 50000000, score: 100, desc: "5000万以上"}
+      
+      abnormal_records:
+        name: "经营异常记录"
+        weight: 0.10
+        scoring:
+          - {min: 5, score: 0, desc: "5次以上"}
+          - {min: 3, max: 5, score: 30, desc: "3-5次"}
+          - {min: 1, max: 3, score: 60, desc: "1-3次"}
+          - {max: 0, score: 100, desc: "无记录"}
+      
+      penalty_records:
+        name: "行政处罚记录"
+        weight: 0.08
+        scoring:
+          - {min: 3, score: 0, desc: "3次以上"}
+          - {min: 1, max: 3, score: 50, desc: "1-3次"}
+          - {max: 0, score: 100, desc: "无记录"}
+      
+      company_status:
+        name: "工商存续状态"
+        weight: 0.07
+        scoring:
+          - {min: 1, score: 100, desc: "存续/在业"}
+          - {max: 0, score: 0, desc: "注销/吊销/异常"}
+      
+      tianyancha_score:
+        name: "天眼查综合评分"
+        weight: 0.20
+        scoring:
+          - {max: 40, score: 20, desc: "评分40以下（高风险）"}
+          - {min: 40, max: 60, score: 50, desc: "评分40-60（关注）"}
+          - {min: 60, max: 80, score: 80, desc: "评分60-80（一般）"}
+          - {min: 80, score: 100, desc: "评分80以上（良好）"}
+
+  company_scale:
+    name: "公司规模"
+    weight: 0.20
+    indicators:
+      insured_count:
+        name: "参保人数"
+        weight: 0.45
+        scoring:
+          - {max: 0, score: 0, desc: "0人（空壳公司）"}
+          - {min: 0, max: 10, score: 20, desc: "1-10人（微型）"}
+          - {min: 10, max: 50, score: 40, desc: "10-50人（小型）"}
+          - {min: 50, max: 200, score: 60, desc: "50-200人（中型）"}
+          - {min: 200, max: 1000, score: 80, desc: "200-1000人（大型）"}
+          - {min: 1000, score: 100, desc: "1000人以上（超大型）"}
+      
+      dp_store_count:
+        name: "大众点评门店数"
+        weight: 0.20
+        scoring:
+          - {min: 1000, score: 100, desc: "1000家以上（全国性头部连锁）"}
+          - {min: 200, max: 1000, score: 80, desc: "200-1000家（区域性龙头）"}
+          - {min: 50, max: 200, score: 60, desc: "50-200家（中型连锁）"}
+          - {min: 10, max: 50, score: 40, desc: "10-50家（小型连锁）"}
+          - {min: 1, max: 10, score: 20, desc: "1-10家（微型/初创零售）"}
+          - {max: 0, score: 50, desc: "无门店（B2B企业正常）"}
+      
+      affiliated_company_count:
+        name: "关联公司数量"
+        weight: 0.20
+        scoring:
+          - {max: 0, score: 60, desc: "无关联公司（独立运营）"}
+          - {min: 0, max: 5, score: 80, desc: "1-5家（适度多元化）"}
+          - {min: 5, max: 20, score: 100, desc: "5-20家（集团化）"}
+          - {min: 20, max: 100, score: 80, desc: "20-100家（大型集团）"}
+          - {min: 100, score: 60, desc: "100家以上（超大型集团）"}
+      
+      affiliated_company_health:
+        name: "关联公司经营健康度"
+        weight: 0.15
+        scoring:
+          - {max: 0, score: 100, desc: "无周边风险（关联公司健康）"}
+          - {min: 0, max: 5, score: 80, desc: "1-5项周边风险"}
+          - {min: 5, max: 20, score: 60, desc: "5-20项周边风险"}
+          - {min: 20, max: 100, score: 40, desc: "20-100项周边风险"}
+          - {min: 100, score: 20, desc: "100项以上（超大型集团正常范围）"}
+
+  payment_behavior:
+    name: "履约行为"
+    weight: 0.15
+    indicators:
+      on_time_rate:
+        name: "回款准时率"
+        weight: 0.20
+        scoring:
+          - {max: 0.5, score: 0, desc: "50%以下"}
+          - {min: 0.5, max: 0.7, score: 30, desc: "50%-70%"}
+          - {min: 0.7, max: 0.85, score: 60, desc: "70%-85%"}
+          - {min: 0.85, max: 0.95, score: 85, desc: "85%-95%"}
+          - {min: 0.95, score: 100, desc: "95%以上"}
+      
+      avg_overdue_days:
+        name: "平均逾期天数"
+        weight: 0.15
+        scoring:
+          - {min: 90, score: 0, desc: "90天以上"}
+          - {min: 60, max: 90, score: 25, desc: "60-90天"}
+          - {min: 30, max: 60, score: 50, desc: "30-60天"}
+          - {min: 10, max: 30, score: 75, desc: "10-30天"}
+          - {max: 10, score: 100, desc: "10天以内"}
+      
+      max_overdue_amount:
+        name: "最大逾期金额占比"
+        weight: 0.10
+        scoring:
+          - {min: 0.5, score: 0, desc: "超过授信50%"}
+          - {min: 0.3, max: 0.5, score: 30, desc: "30%-50%"}
+          - {min: 0.1, max: 0.3, score: 60, desc: "10%-30%"}
+          - {min: 0.05, max: 0.1, score: 85, desc: "5%-10%"}
+          - {max: 0.05, score: 100, desc: "5%以内"}
+      
+      executed_count:
+        name: "历史被执行人次数"
+        weight: 0.20
+        scoring:
+          - {min: 5, score: 0, desc: "5次以上"}
+          - {min: 2, max: 5, score: 20, desc: "2-5次"}
+          - {min: 1, max: 2, score: 50, desc: "1次"}
+          - {max: 0, score: 100, desc: "无"}
+      
+      restriction_count:
+        name: "限制高消费次数"
+        weight: 0.10
+        scoring:
+          - {min: 3, score: 0, desc: "3次以上"}
+          - {min: 1, max: 3, score: 30, desc: "1-3次"}
+          - {max: 0, score: 100, desc: "无"}
+      
+      cooperation_years:
+        name: "合作年限"
+        weight: 0.10
+        scoring:
+          - {max: 0.5, score: 20, desc: "半年以内"}
+          - {min: 0.5, max: 1, score: 40, desc: "半年-1年"}
+          - {min: 1, max: 3, score: 60, desc: "1-3年"}
+          - {min: 3, max: 5, score: 80, desc: "3-5年"}
+          - {min: 5, score: 100, desc: "5年以上"}
+      
+      affiliated_company_health:
+        name: "关联公司经营健康度"
+        weight: 0.15
+        scoring:
+          - {max: 0, score: 100, desc: "无周边风险（关联健康）"}
+          - {min: 0, max: 5, score: 80, desc: "1-5项周边风险"}
+          - {min: 5, max: 20, score: 50, desc: "5-20项周边风险"}
+          - {min: 20, max: 50, score: 20, desc: "20-50项周边风险"}
+          - {min: 50, score: 0, desc: "50项以上（关联风险极高）"}
+
+  external_risk:
+    name: "外部风险"
+    weight: 0.15
+    indicators:
+      lawsuit_count:
+        name: "被告诉讼数量"
+        weight: 0.25
+        scoring:
+          - {min: 10, score: 0, desc: "10起以上"}
+          - {min: 5, max: 10, score: 25, desc: "5-10起"}
+          - {min: 2, max: 5, score: 50, desc: "2-5起"}
+          - {min: 1, max: 2, score: 75, desc: "1-2起"}
+          - {max: 0, score: 100, desc: "无"}
+      
+      contract_dispute_count:
+        name: "买卖合同纠纷"
+        weight: 0.15
+        scoring:
+          - {min: 5, score: 0, desc: "5起以上"}
+          - {min: 3, max: 5, score: 30, desc: "3-5起"}
+          - {min: 1, max: 3, score: 60, desc: "1-3起"}
+          - {max: 0, score: 100, desc: "无"}
+      
+      dishonest_records:
+        name: "失信被执行人"
+        weight: 0.25
+        scoring:
+          - {min: 3, score: 0, desc: "3次以上"}
+          - {min: 1, max: 3, score: 20, desc: "1-3次"}
+          - {max: 0, score: 100, desc: "无记录"}
+      
+      pledge_freeze:
+        name: "股权冻结/质押"
+        weight: 0.15
+        scoring:
+          - {min: 0.5, score: 0, desc: "超过50%股权"}
+          - {min: 0.2, max: 0.5, score: 30, desc: "20%-50%"}
+          - {min: 0.05, max: 0.2, score: 60, desc: "5%-20%"}
+          - {max: 0.05, score: 100, desc: "5%以内或无"}
+      
+      negative_news:
+        name: "负面舆情"
+        weight: 0.10
+        scoring:
+          - {min: 20, score: 0, desc: "20条以上"}
+          - {min: 10, max: 20, score: 30, desc: "10-20条"}
+          - {min: 5, max: 10, score: 55, desc: "5-10条"}
+          - {min: 1, max: 5, score: 80, desc: "1-5条"}
+          - {max: 0, score: 100, desc: "无"}
+      
+      dp_pause_ratio:
+        name: "门店暂停营业比例"
+        weight: 0.10
+        scoring:
+          - {min: 0.5, score: 0, desc: "50%以上"}
+          - {min: 0.3, max: 0.5, score: 30, desc: "30%-50%"}
+          - {min: 0.1, max: 0.3, score: 60, desc: "10%-30%"}
+          - {max: 0.1, score: 100, desc: "10%以内"}
+
+# 风险等级划分
+risk_grades:
+  AAA: {min: 90, max: 100.0, desc: "优质客户"}
+  AA: {min: 80, max: 89.99, desc: "良好客户"}
+  A: {min: 70, max: 79.99, desc: "一般客户"}
+  BBB: {min: 60, max: 69.99, desc: "关注客户"}
+  BB: {min: 50, max: 59.99, desc: "谨慎客户"}
+  B: {min: 40, max: 49.99, desc: "高风险客户"}
+  C: {min: 0, max: 39.99, desc: "极高风险"}
+
+# 账期建议映射
+credit_policies:
+  AAA: {days: 90, max_credit: 5000000, advance_ratio: 0.0, review_cycle: "annual", desc: "正常合作，年度复核"}
+  AA: {days: 60, max_credit: 3000000, advance_ratio: 0.0, review_cycle: "semi_annual", desc: "正常合作，半年复核"}
+  A: {days: 30, max_credit: 1500000, advance_ratio: 0.1, review_cycle: "quarterly", desc: "正常合作，季度复核，10%预付"}
+  BBB: {days: 15, max_credit: 800000, advance_ratio: 0.3, review_cycle: "monthly", desc: "加强跟踪，月复核，30%预付"}
+  BB: {days: 0, max_credit: 300000, advance_ratio: 0.5, review_cycle: "monthly", desc: "货到付款或50%预付"}
+  B: {days: 0, max_credit: 100000, advance_ratio: 1.0, review_cycle: "weekly", desc: "全款预付，停止新增"}
+  C: {days: 0, max_credit: 0, advance_ratio: 1.0, review_cycle: "immediate", desc: "停止合作，催收欠款"}
