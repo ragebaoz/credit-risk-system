@@ -49,6 +49,21 @@ credit-risk-system/
 └── requirements.txt
 ```
 
+## 依赖
+
+- Python 3.13+
+- OpenCLI CLI（Node.js）：用于大众点评/天眼查浏览器自动化抓取
+
+### OpenCLI 路径配置
+
+默认会读取环境变量 `OPENCLI_PATH`，指向 OpenCLI 构建产物：
+
+```bash
+export OPENCLI_PATH=/Users/yuxuanyu/workspace/OpenCLI/dist/src/main.js
+```
+
+也可以复制 `.env.example` 为 `.env` 并在运行时加载。
+
 ## 快速开始
 
 ```bash
