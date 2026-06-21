@@ -73,19 +73,77 @@ pip install -r requirements.txt
 # 2. 初始化数据库
 python scripts/init_db.py
 
-# 3. 配置评估规则（编辑 config/rules.yaml）
+# 3. 配置 OpenCLI 路径（可选，默认已指向本地构建产物）
+cp .env.example .env
+# 编辑 .env 中的 OPENCLI_PATH
 
-# 4. 添加客户并评估
-python -m src.evaluation.client_eval --name "测试客户" --credit-code 91110000XXXXXXXX
+# 4. 运行完整评估流程生成报告
+python scripts/generate_detailed_report.py
+```
 
-# 5. 批量评估
+> 报告默认保存到 `~/Desktop/信用评估_数据与逻辑明细.xlsx`。
+
+## 常用命令
+
+### 单客户评估
+
+```bash
+python -m src.evaluation.client_eval --name "名创优品" --credit-code 91440101MA59J1K15C --industry 零售
+```
+
+### Excel 批量评估
+
+```bash
 python -m src.evaluation.batch_eval --input data/client_list.xlsx
+```
 
-# 6. 启动监控
+### 生成详细报告
+
+使用内置示例客户：
+
+```bash
+python scripts/generate_detailed_report.py
+```
+
+使用自定义客户 JSON：
+
+```bash
+python scripts/generate_detailed_report.py --clients data/clients.json --output ./report.xlsx
+```
+
+### KA 客户批量评估
+
+```bash
+python scripts/batch_ka_evaluation.py
+```
+
+### 处理新客户名单
+
+```bash
+python scripts/process_new_clients.py --input data/new_clients_template.tsv
+```
+
+### 大众点评门店搜索
+
+```bash
+python scripts/dianping_search.py "名创优品"
+```
+
+### 启动监控
+
+```bash
 python -m src.monitoring.watcher
 ```
 
-## 评估维度说明
+### 启动 API 服务
+
+```bash
+python -m src.api.server
+```
+
+---
+
+## 项目结构
 
 ### 1. 基础信用维度（30%）
 - 企业成立年限
