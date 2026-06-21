@@ -16,7 +16,13 @@ DEFAULT_OPENCLI_PATH = "/Users/yuxuanyu/workspace/OpenCLI/dist/src/main.js"
 def get_opencli_path() -> str:
     """返回 OpenCLI 入口 JS 文件的绝对路径。"""
     path = os.environ.get("OPENCLI_PATH", DEFAULT_OPENCLI_PATH)
-    return os.path.abspath(os.path.expanduser(path))
+    resolved = os.path.abspath(os.path.expanduser(path))
+    if not os.path.isfile(resolved):
+        raise FileNotFoundError(
+            f"OpenCLI entry file not found: {resolved}\n"
+            f"Set OPENCLI_PATH via environment variable or .env file to point to the correct location."
+        )
+    return resolved
 
 
 def run_opencli(*args: str, timeout: int = 15) -> Tuple[str, str, int]:
