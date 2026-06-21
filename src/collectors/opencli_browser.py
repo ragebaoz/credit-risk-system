@@ -36,7 +36,6 @@ def _load_brand_map() -> Dict[str, str]:
     # 可能的配置路径（按优先级）
     candidate_paths = [
         os.path.join(os.path.dirname(__file__), "dianping_brand_map.json"),
-        os.path.join(os.path.dirname(__file__), "../../skills/ka-credit-evaluation/references/dianping_brand_map.json"),
     ]
 
     for path in candidate_paths:
