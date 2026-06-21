@@ -6,8 +6,6 @@ KA客户批量评估
 """
 import sys
 import os
-import json
-import subprocess
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from typing import Dict, Any, List
@@ -22,17 +20,92 @@ from openpyxl import Workbook
 
 
 # ============================================================================
-# 主流程
+# KA 数据配置
 # ============================================================================
-def run_subprocess(script_name: str):
-    """运行独立子进程脚本，避免 asyncio 冲突"""
-    script_path = os.path.join(os.path.dirname(__file__), script_name)
-    result = subprocess.run(
-        [sys.executable, script_path],
-        capture_output=False,
-        text=True,
-    )
-    return result.returncode == 0
+ENTITIES = [
+    {"ka": "KA凯知乐",       "brand": "凯知乐",   "company": "凯知乐贸易（天津）有限公司"},
+    {"ka": "KA玩具反斗城",   "brand": "反斗城",   "company": "玩具反斗城（中国）商贸有限公司"},
+    {"ka": "KA浙江凯蓝",     "brand": "TGP",      "company": "浙江凯畔商贸有限公司"},
+    {"ka": "KA浙江凯蓝",     "brand": "伶俐",     "company": "浙江凯畔商贸有限公司"},
+    {"ka": "KA浙江凯蓝",     "brand": "伶俐",     "company": "浙江盛伶商贸有限公司"},
+    {"ka": "KA万辰集团",     "brand": "万辰",     "company": "南京万兴商业管理有限公司"},
+    {"ka": "KA万辰集团",     "brand": "万辰",     "company": "南京万好供应链管理有限公司"},
+    {"ka": "KA万辰集团",     "brand": "万辰",     "company": "南京万优供应链管理有限公司"},
+    {"ka": "KA万辰集团",     "brand": "万辰",     "company": "南京万昌供应链管理有限公司"},
+    {"ka": "KA万辰集团",     "brand": "万辰",     "company": "南京万灿供应链管理有限公司"},
+    {"ka": "KA万辰集团",     "brand": "万辰",     "company": "泰州万拓供应链管理有限公司"},
+    {"ka": "KA万辰集团",     "brand": "万辰",     "company": "南京万权商业管理有限公司"},
+    {"ka": "KA万辰集团",     "brand": "老婆大人", "company": "宁波巨库商贸有限公司"},
+    {"ka": "KA上海寰越",     "brand": "A2",       "company": "上海寰越电子商务有限公司"},
+]
+
+DP_KEYWORDS = {
+    "KA凯知乐":       {"凯知乐": "凯知乐"},
+    "KA玩具反斗城":   {"反斗城": "玩具反斗城"},
+    "KA浙江凯蓝":     {"TGP": "The Green Party", "伶俐": "伶俐"},
+    "KA万辰集团":     {"万辰": "万辰零食", "老婆大人": "老婆大人"},
+    "KA上海寰越":     {"A2": "A2"},
+}
+CORE_CITIES = {"上海": 1, "杭州": 3}
+
+from src.collectors.opencli_tianyancha_browser import OpenCLITianYanChaCollector
+from src.collectors.browser_manager import ensure_opencli_browser
+from src.collectors.opencli_browser import OpenCLIBrowser
+
+
+def fetch_ka_tianyancha() -> List[Dict[str, Any]]:
+    """使用 OpenCLI Browser 抓取 KA 客户天眼查数据。"""
+    collector = OpenCLITianYanChaCollector(workspace="default")
+    results = []
+    for item in ENTITIES:
+        print(f"[{item['ka']}] {item['company']}", flush=True)
+        try:
+            data = collector.collect(None, item["company"])
+            results.append({
+                "ka": item["ka"],
+                "brand": item["brand"],
+                "company": item["company"],
+                "data": data,
+            })
+            print("  OK", flush=True)
+        except Exception as e:
+            print(f"  ERR: {e}", flush=True)
+            results.append({
+                "ka": item["ka"],
+                "brand": item["brand"],
+                "company": item["company"],
+                "data": {},
+            })
+    return results
+
+
+def fetch_ka_dianping() -> Dict[str, Dict[str, Any]]:
+    """使用 OpenCLI Browser 抓取 KA 客户大众点评门店数据。"""
+    browser_status = ensure_opencli_browser("default")
+    if not browser_status["ok"]:
+        print(f"OpenCLI Browser 不可用: {browser_status.get('error')}")
+        return {}
+
+    browser = OpenCLIBrowser(workspace=browser_status["workspace"])
+    dp_results = {}
+    for ka_name, brands in DP_KEYWORDS.items():
+        total_stores = 0
+        city_breakdown = {}
+        for brand, keyword in brands.items():
+            print(f"[{ka_name}] 搜索 {brand}: {keyword}", flush=True)
+            try:
+                result = browser.dianping_search_multi_cities(keyword, cities=CORE_CITIES)
+                total_stores += result.get("total_store_count", 0) or 0
+                city_breakdown.update(result.get("city_breakdown", {}))
+            except Exception as e:
+                print(f"  ERR: {e}", flush=True)
+        dp_results[ka_name] = {
+            "total_store_count": total_stores,
+            "total_paused_count": 0,
+            "city_breakdown": city_breakdown,
+        }
+        print(f"{ka_name}: {total_stores}家", flush=True)
+    return dp_results
 
 
 def merge_by_ka(raw_results: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -239,21 +312,13 @@ def main():
     print("KA客户批量评估开始")
     print("=" * 60)
 
-    # 1. 天眼查抓取（独立子进程）
-    print("\n>>> 第1步: 天眼查抓取（独立进程）...")
-    if not run_subprocess("fetch_ka_tianyancha.py"):
-        print("天眼查抓取失败")
-        return
-    with open("/tmp/ka_tianyancha.json") as f:
-        raw_results = json.load(f)
+    # 1. 天眼查抓取
+    print("\n>>> 第1步: 天眼查抓取...")
+    raw_results = fetch_ka_tianyancha()
 
-    # 2. 大众点评抓取（独立子进程）
-    print("\n>>> 第2步: 大众点评抓取（独立进程）...")
-    if not run_subprocess("fetch_ka_dianping.py"):
-        print("大众点评抓取失败")
-        return
-    with open("/tmp/ka_dianping.json") as f:
-        dp_data = json.load(f)
+    # 2. 大众点评抓取
+    print("\n>>> 第2步: 大众点评抓取...")
+    dp_data = fetch_ka_dianping()
 
     # 3. 汇总
     print("\n>>> 第3步: 按KA客户汇总...")
