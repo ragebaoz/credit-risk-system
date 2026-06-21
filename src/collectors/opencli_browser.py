@@ -20,6 +20,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from src.utils.opencli_path import get_opencli_path
+from src.utils.notify import notify_user
 
 
 # ------------------------------------------------------------------
@@ -248,15 +249,16 @@ class OpenCLIBrowser:
         is_blocked = any(p in current_url or p in page_text for p in anti_patterns)
 
         if is_blocked:
-            print(f"[天眼查] ⚠️ 触发反爬/验证码，等待 15 秒后重试...")
-            time.sleep(15)
-            # 重试一次
-            self.goto(search_url, settle_ms=5000)
+            notify_user(
+                title="天眼查需要人工验证",
+                message=f"客户 [{company_name}] 触发天眼查反爬/验证码，请在 Chrome 中完成验证后按回车继续。",
+            )
+            # 用户处理完后重新检查当前页面
             page_text = self.get_text()
             current_url = self._get_current_url()
             is_blocked = any(p in current_url or p in page_text for p in anti_patterns)
             if is_blocked:
-                print(f"[天眼查] ❌ 重试后仍被拦截，跳过 {company_name}")
+                print(f"[天眼查] ❌ 人工验证后仍被拦截，跳过 {company_name}")
                 return {"_error": "blocked_by_antibot", "company_name": company_name}
 
         # 先获取搜索结果页文本（作为 fallback）
@@ -585,6 +587,10 @@ class OpenCLIBrowser:
         # 3. 检查是否被拦截（验证码页）
         current_url = self._get_current_url()
         if "verify.meituan.com" in current_url:
+            notify_user(
+                title="大众点评需要人工验证",
+                message=f"品牌 [{keyword}] 触发大众点评验证码，请在 Chrome 中完成验证后按回车继续。",
+            )
             return {
                 "error": "captcha_required",
                 "message": "触发滑块验证码，需要手动完成验证",
