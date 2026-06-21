@@ -15,9 +15,7 @@ from src.collectors.enterprise import EnterpriseCollector
 from src.collectors.financial import FinancialCollector
 from src.collectors.judicial import JudicialCollector
 from src.collectors.news import NewsCollector
-from src.collectors.browser_aiqicha import AiQichaEnterpriseCollector, PLAYWRIGHT_AVAILABLE
-from src.collectors.opencli_tianyancha import TianYanChaEnterpriseCollector as PlaywrightTianYanChaCollector
-from src.collectors.cdp_dianping import CDPDianPingCollector as PlaywrightDianPingCollector
+from src.collectors.browser_aiqicha import AiQichaEnterpriseCollector
 from src.collectors.opencli_tianyancha_browser import OpenCLITianYanChaCollector, TianYanChaEnterpriseCollector
 from src.collectors.opencli_browser import OpenCLIBrowser
 from src.collectors.browser_manager import ensure_opencli_browser
@@ -42,7 +40,7 @@ class ClientEvaluator:
         self.new_client = new_client
         self._opencli_browser: Optional[OpenCLIBrowser] = None
         
-        # 模式优先级: OpenCLI Browser > Playwright CDP > API/模拟数据
+        # 模式优先级: OpenCLI Browser > API/模拟数据
         if use_opencli:
             print("[评估器] 尝试使用 OpenCLI Browser 模式（复用你当前的 Chrome + 登录态）")
             browser_status = ensure_opencli_browser(workspace="default")
@@ -56,25 +54,12 @@ class ClientEvaluator:
                 self.use_browser = True  # 标记为浏览器模式，用于后续逻辑判断
             else:
                 print(f"[评估器] ⚠️ OpenCLI Browser 不可用: {browser_status.get('error', 'unknown')}")
-                if use_browser and PLAYWRIGHT_AVAILABLE:
-                    print("[评估器] 回退到 Playwright CDP 模式")
-                    self.enterprise_collector = PlaywrightTianYanChaCollector(headless=headless)
-                    self.dianping_collector = PlaywrightDianPingCollector()
-                    self.judicial_collector = None
-                    self.use_browser = True
-                else:
-                    print("[评估器] 回退到 API/模拟数据模式")
-                    self.enterprise_collector = EnterpriseCollector(api_key)
-                    self.dianping_collector = None
-                    self.judicial_collector = JudicialCollector(api_key)
-        elif use_browser and PLAYWRIGHT_AVAILABLE:
-            print("[评估器] 使用 Playwright CDP 浏览器模式")
-            self.enterprise_collector = PlaywrightTianYanChaCollector(headless=headless)
-            self.dianping_collector = PlaywrightDianPingCollector()
-            self.judicial_collector = None
+                print("[评估器] OpenCLI Browser 不可用，回退到 API/模拟数据模式")
+                self.enterprise_collector = EnterpriseCollector(api_key)
+                self.dianping_collector = None
+                self.judicial_collector = JudicialCollector(api_key)
         else:
-            if use_browser and not PLAYWRIGHT_AVAILABLE:
-                print("[评估器] Playwright 未安装，回退到 API/模拟模式")
+            print("[评估器] 使用 API/模拟数据模式")
             self.enterprise_collector = EnterpriseCollector(api_key)
             self.dianping_collector = None
             self.judicial_collector = JudicialCollector(api_key)
@@ -347,8 +332,8 @@ if __name__ == "__main__":
     parser.add_argument('--industry', help='行业类型')
     parser.add_argument('--financial', help='财务报表Excel路径')
     parser.add_argument('--opencli', action='store_true', default=True, help='使用 OpenCLI Browser 模式（默认开启，复用当前 Chrome）')
-    parser.add_argument('--no-opencli', action='store_true', help='禁用 OpenCLI Browser，回退到 Playwright 或模拟数据')
-    parser.add_argument('--browser', action='store_true', help='使用 Playwright CDP 浏览器模式（当 OpenCLI 不可用时）')
+    parser.add_argument('--no-opencli', action='store_true', help='禁用 OpenCLI Browser，回退到 API/模拟数据模式')
+    parser.add_argument('--browser', action='store_true', help='已废弃，不再支持 Playwright CDP 模式')
     parser.add_argument('--no-headless', action='store_true', help='浏览器可视化模式（调试用）')
     parser.add_argument('--new-client', action='store_true', help='首次合作客户（无历史交易数据）')
     parser.add_argument('--no-save', action='store_true', help='不保存到数据库')
