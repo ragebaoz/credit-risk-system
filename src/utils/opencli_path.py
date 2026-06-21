@@ -9,6 +9,9 @@ import os
 import subprocess
 from typing import Tuple
 
+from dotenv import load_dotenv
+
+load_dotenv(override=False)
 
 DEFAULT_OPENCLI_PATH = "/Users/yuxuanyu/workspace/OpenCLI/dist/src/main.js"
 
