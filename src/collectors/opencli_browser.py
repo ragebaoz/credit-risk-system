@@ -80,7 +80,6 @@ class OpenCLIBrowser:
             self.OPENCLI_BIN,
             get_opencli_path(),
             "browser",
-            "--workspace",
             self.workspace,
             *args,
         ]

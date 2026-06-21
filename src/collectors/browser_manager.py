@@ -23,7 +23,7 @@ def get_opencli_workspace_status(workspace: str = "default") -> Dict[str, Any]:
     """获取指定 browser workspace 的状态"""
     try:
         stdout, stderr, rc = run_opencli(
-            "browser", "--workspace", workspace, "state", timeout=2
+            "browser", workspace, "state", timeout=2
         )
         return {
             "ok": rc == 0 and "error" not in stdout.lower(),
@@ -60,7 +60,7 @@ def ensure_opencli_browser(workspace: str = "default") -> Dict[str, Any]:
     # 3. 尝试绑定到当前标签页（bound workspace）
     try:
         stdout, stderr, rc = run_opencli(
-            "browser", "bind", "--workspace", f"bound:{workspace}", timeout=2
+            "browser", f"bound:{workspace}", "bind", timeout=2
         )
         if rc == 0 or "bound" in stdout.lower():
             return {"ok": True, "workspace": f"bound:{workspace}", "mode": "bound_tab"}
