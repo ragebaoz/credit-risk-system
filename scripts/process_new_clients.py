@@ -67,9 +67,7 @@ def build_eval_list(df: pd.DataFrame):
 
 def evaluate_clients(eval_df: pd.DataFrame):
     """批量评估客户"""
-    # 当前环境 OpenCLI extension 未连接，直接用模拟数据快速出结果
-    # 如需真实数据，请确保 Chrome + OpenCLI 扩展已启用，再改为 use_opencli=True
-    evaluator = ClientEvaluator(use_opencli=False, use_browser=False, new_client=True)
+    evaluator = ClientEvaluator(use_opencli=True, use_browser=True, new_client=True)
     results = []
 
     print(f"\n开始评估，共 {len(eval_df)} 条记录...\n")
