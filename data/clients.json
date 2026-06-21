@@ -1,0 +1,48 @@
+{
+  "clients": [
+    {
+      "name": "名创优品",
+      "credit_code": "91440101MA59J1K15C",
+      "industry": "零售",
+      "internal_data": {
+        "dp_store_count": 1226,
+        "dp_paused_count": 0,
+        "dp_avg_rating": 4.2,
+        "inventory_turnover_days": 45
+      }
+    },
+    {
+      "name": "浙江如苔文化",
+      "credit_code": "91330784MA29Q4QT4K",
+      "industry": "零售",
+      "internal_data": {
+        "dp_store_count": 300,
+        "dp_paused_count": 0,
+        "dp_avg_rating": 4.0,
+        "inventory_turnover_days": 60
+      }
+    },
+    {
+      "name": "潮品挚尚",
+      "credit_code": "91440101MA59J1K15D",
+      "industry": "零售",
+      "internal_data": {
+        "dp_store_count": 56,
+        "dp_paused_count": 0,
+        "dp_avg_rating": 4.0,
+        "inventory_turnover_days": 60
+      }
+    },
+    {
+      "name": "力达动漫",
+      "credit_code": "91440101MA59J1K15E",
+      "industry": "零售",
+      "internal_data": {
+        "dp_store_count": 1,
+        "dp_paused_count": 0,
+        "dp_avg_rating": 3.5,
+        "inventory_turnover_days": 90
+      }
+    }
+  ]
+}

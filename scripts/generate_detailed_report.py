@@ -6,8 +6,9 @@
 import sys
 import os
 import json
+import argparse
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -445,53 +446,79 @@ def create_city_sheet(wb, city_data: Dict[str, Dict[str, Any]]):
         ws.column_dimensions[column].width = adjusted_width
 
 
+DEFAULT_CLIENTS = [
+    {
+        'name': '名创优品',
+        'credit_code': '91440101MA59J1K15C',
+        'industry': '零售',
+        'internal_data': {
+            'dp_store_count': 1226,
+            'dp_paused_count': 0,
+            'dp_avg_rating': 4.2,
+            'inventory_turnover_days': 45,
+        }
+    },
+    {
+        'name': '浙江如苔文化',
+        'credit_code': '91330784MA29Q4QT4K',
+        'industry': '零售',
+        'internal_data': {
+            'dp_store_count': 300,
+            'dp_paused_count': 0,
+            'dp_avg_rating': 4.0,
+            'inventory_turnover_days': 60,
+        }
+    },
+    {
+        'name': '潮品挚尚',
+        'credit_code': '91440101MA59J1K15D',
+        'industry': '零售',
+        'internal_data': {
+            'dp_store_count': 56,
+            'dp_paused_count': 0,
+            'dp_avg_rating': 4.0,
+            'inventory_turnover_days': 60,
+        }
+    },
+    {
+        'name': '力达动漫',
+        'credit_code': '91440101MA59J1K15E',
+        'industry': '零售',
+        'internal_data': {
+            'dp_store_count': 1,
+            'dp_paused_count': 0,
+            'dp_avg_rating': 3.5,
+            'inventory_turnover_days': 90,
+        }
+    },
+]
+
+
+def load_clients(clients_path: Optional[str] = None) -> List[Dict[str, Any]]:
+    """加载客户列表。默认使用内置示例客户。"""
+    if not clients_path:
+        return DEFAULT_CLIENTS
+    with open(clients_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    if isinstance(data, dict) and 'clients' in data:
+        return data['clients']
+    return data
+
+
 def main():
-    clients = [
-        {
-            'name': '名创优品',
-            'credit_code': '91440101MA59J1K15C',
-            'industry': '零售',
-            'internal_data': {
-                'dp_store_count': 1226,
-                'dp_paused_count': 0,
-                'dp_avg_rating': 4.2,
-                'inventory_turnover_days': 45,
-            }
-        },
-        {
-            'name': '浙江如苔文化',
-            'credit_code': '91330784MA29Q4QT4K',
-            'industry': '零售',
-            'internal_data': {
-                'dp_store_count': 300,
-                'dp_paused_count': 0,
-                'dp_avg_rating': 4.0,
-                'inventory_turnover_days': 60,
-            }
-        },
-        {
-            'name': '潮品挚尚',
-            'credit_code': '91440101MA59J1K15D',
-            'industry': '零售',
-            'internal_data': {
-                'dp_store_count': 56,
-                'dp_paused_count': 0,
-                'dp_avg_rating': 4.0,
-                'inventory_turnover_days': 60,
-            }
-        },
-        {
-            'name': '力达动漫',
-            'credit_code': '91440101MA59J1K15E',
-            'industry': '零售',
-            'internal_data': {
-                'dp_store_count': 1,
-                'dp_paused_count': 0,
-                'dp_avg_rating': 3.5,
-                'inventory_turnover_days': 90,
-            }
-        },
-    ]
+    parser = argparse.ArgumentParser(description='生成客户信用评估详细报告')
+    parser.add_argument(
+        '--clients',
+        help='客户列表 JSON 文件路径（默认使用内置示例客户）',
+    )
+    parser.add_argument(
+        '--output',
+        default='~/Desktop/信用评估_数据与逻辑明细.xlsx',
+        help='输出 Excel 路径',
+    )
+    args = parser.parse_args()
+
+    clients = load_clients(args.clients)
 
     results = []
     for c in clients:
@@ -512,7 +539,11 @@ def main():
                 city_data[cname] = json.load(f)
         except Exception as e:
             print(f"警告: 无法加载 {fname}: {e}")
-    city_data['力达动漫'] = {"city_breakdown": {"未抓取": 1}}
+
+    # 为没有城市数据的客户填充默认值
+    for c in clients:
+        if c['name'] not in city_data:
+            city_data[c['name']] = {"city_breakdown": {"未抓取": c['internal_data'].get('dp_store_count', 0)}}
 
     # 生成Excel
     wb = Workbook()
@@ -522,7 +553,7 @@ def main():
     create_credit_calc_sheet(wb, results)
     create_city_sheet(wb, city_data)
 
-    output_path = os.path.expanduser("~/Desktop/信用评估_数据与逻辑明细.xlsx")
+    output_path = os.path.expanduser(args.output)
     wb.save(output_path)
     print(f"\n✅ 明细报告已保存: {output_path}")
 
